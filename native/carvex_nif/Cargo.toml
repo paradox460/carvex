@@ -1,0 +1,23 @@
+[package]
+name = "carvex_nif"
+version = "0.0.1"
+authors = ["Jeff Sandberg"]
+license = "MIT"
+description = "Rust NIF for Carvex, an Elixir binding for the Carve markup language"
+repository = "https://github.com/paradox460/carvex"
+edition = "2024"
+rust-version = "1.91"
+
+[lib]
+name = "carvex_nif"
+path = "src/lib.rs"
+crate-type = ["cdylib"]
+
+[dependencies]
+# Imported as `carve`. No default features: drops the filesystem include resolver
+# (string entry points never read files) and the experimental event parser.
+carve = { package = "carve-lang", version = "=0.1.14", default-features = false }
+rustler = "0.38.0"
+ammonia = "4.2"
+syntect = { version = "5.3", default-features = false, features = ["default-fancy"] }
+two-face = { version = "0.5", default-features = false, features = ["syntect-default-fancy"] }

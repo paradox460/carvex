@@ -1,0 +1,17 @@
+#!/usr/bin/env fish
+#MISE description="Tag the version in mix.exs, wait for the NIF release build, then publish to Hex"
+#MISE depends=["tag"]
+
+set -l current_version (string match -gr '@version "(.*?)"' -- (cat mix.exs))
+set -l sha (git rev-list -n 1 v$current_version)
+
+echo "Waiting for the release workflow run for v$current_version ($sha)"
+set -l run_id
+while test -z "$run_id"
+  set run_id (gh run list --workflow release.yml --commit $sha --event push --json databaseId --jq '.[0].databaseId')
+  test -z "$run_id"; and sleep 10
+end
+
+gh run watch $run_id --exit-status; or exit 1
+
+mise run publish
