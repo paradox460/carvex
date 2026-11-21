@@ -33,7 +33,11 @@ defmodule CarvexTest do
       %{doc: doc}
     end
 
-    for opts <- [[], [render: [safe: true]], [render: [profile: :comment]]] do
+    for opts <- [
+          [],
+          [render: [safe: true, allow_raw: true]],
+          [render: [profile: :comment, allow_raw: true]]
+        ] do
       test "renders verbatim in block and inline position with #{inspect(opts)}", %{doc: doc} do
         html = Carvex.to_html!(doc, unquote(opts))
         assert html =~ "<x-block></x-block>"
@@ -41,6 +45,25 @@ defmodule CarvexTest do
         assert html =~ "<p>a<i>b</i></p>"
         refute html =~ "carvexraw"
       end
+    end
+
+    for render <- [[safe: true], [profile: :comment], [profile: :full]] do
+      test "is rejected with #{inspect(render)} unless allow_raw", %{doc: doc} do
+        assert {:error, %Carvex.CarveError{reason: :raw_not_allowed}} =
+                 Carvex.to_html(doc, render: unquote(render))
+      end
+    end
+
+    test "is rejected when a plugin step adds it under a profile" do
+      doc =
+        Carvex.new(source: "a", render: [profile: :comment])
+        |> Carvex.Document.append_steps(
+          raw: fn doc ->
+            Carvex.Document.update_nodes(doc, Carvex.Text, fn _ -> %Carvex.Raw{content: "<i>x</i>"} end)
+          end
+        )
+
+      assert {:error, %Carvex.CarveError{reason: :raw_not_allowed}} = Carvex.to_html(doc)
     end
 
     test "is a raw html node in other outputs", %{doc: doc} do

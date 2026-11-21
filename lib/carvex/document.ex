@@ -113,17 +113,24 @@ defmodule Carvex.Document do
       type: :boolean,
       default: false,
       doc:
-        "Escape raw HTML (`` `x`{=html} ``, ```` ```=html ````) instead of emitting it. `Carvex.Raw` nodes are unaffected."
+        "Escape raw HTML (`` `x`{=html} ``, ```` ```=html ````) instead of emitting it. `Carvex.Raw` nodes are rejected unless `allow_raw: true`."
     ],
     profile: [
       type: {:in, [nil, :full, :article, :comment, :minimal]},
       default: nil,
-      doc: "carve-rs feature-restriction profile for untrusted input."
+      doc:
+        "carve-rs feature-restriction profile for untrusted input. `Carvex.Raw` nodes are rejected unless `allow_raw: true`."
     ],
     profile_base_host: [
       type: {:or, [:string, nil]},
       default: nil,
       doc: "Host the profile's link policy treats as internal."
+    ],
+    allow_raw: [
+      type: :boolean,
+      default: false,
+      doc:
+        "Render `Carvex.Raw` nodes from plugins when `safe:` or `profile:` is set. `Carvex.Raw` is written verbatim, bypassing both, so without this such a document fails with reason `:raw_not_allowed`. Enable only if every plugin that emits `Carvex.Raw` is trusted."
     ],
     mention_url: [
       type: {:or, [:string, nil]},

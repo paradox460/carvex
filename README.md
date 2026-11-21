@@ -31,8 +31,9 @@ Options are grouped like MDEx's; see `Carvex.new/1` for the full list.
   `ascii_heading_ids` (`:off`, `:fold`, `:strict`).
 - `render:` - `sections` (wrap headings in `<section>`, default `true`),
   `source_lines`, `mode` (`:interactive` or `:static`, which flattens interactive
-  constructs), `safe`, `profile`, `profile_base_host`, `mention_url`, `tag_url`,
-  `symbols`, `smart_typography` (Markdown output), `align_tables` (`to_carve/2`).
+  constructs), `safe`, `profile`, `profile_base_host`, `allow_raw`, `mention_url`,
+  `tag_url`, `symbols`, `smart_typography` (Markdown output), `align_tables`
+  (`to_carve/2`).
 
 `safe: true` escapes raw HTML (`` `x`{=html} ``, ```` ```=html ````) instead of
 emitting it. `profile:` applies one of carve-rs's feature-restriction profiles
@@ -49,6 +50,12 @@ Carvex.to_html("# Head\n\ntext", render: [profile: :comment])
 Carvex.to_html(String.duplicate("a", 10_001), render: [profile: :minimal])
 # => {:error, %Carvex.CarveError{reason: {:profile_violation, "..."}}}
 ```
+
+Plugins can inject `Carvex.Raw` HTML, which carve-rs never sees, so `safe:` and
+`profile:` can't police it. With either set, a document that still holds
+`Carvex.Raw` after plugin steps fails with reason `:raw_not_allowed`. Pass
+`render: [allow_raw: true]` only if every such plugin is trusted. Syntax-highlighted
+code is unaffected.
 
 `symbols:` values are emitted as trusted raw HTML; never build them from user input.
 
@@ -95,8 +102,8 @@ doc
 Plugins expose `attach/2` and use the same functions as MDEx plugins
 (`register_options/2`, `put_options/2`, `append_steps/2`, `halt/1`, …).
 See `Carvex.Document` for more. Use `Carvex.Raw` nodes with `Carvex.safe_html/2`
-to inject HTML from a plugin; `Carvex.Raw` is emitted verbatim regardless of `safe:`
-and profiles.
+to inject HTML from a plugin; `Carvex.Raw` is emitted verbatim; with `safe:` or
+`profile:` set it needs `allow_raw: true` (see Carve options).
 
 ```elixir
 Carvex.to_html!("hi", plugins: [{MyPlugin, my_option: true}])

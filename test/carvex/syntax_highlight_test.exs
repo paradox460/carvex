@@ -28,6 +28,11 @@ defmodule Carvex.SyntaxHighlightTest do
       refute html =~ "highlight_lines="
     end
 
+    test "highlighted output is not gated by safe:" do
+      html = Carvex.to_html!(@src, syntax_highlight: [engine: :syntect], render: [safe: true])
+      assert html =~ ~s(<pre class="syntect")
+    end
+
     test "code blocks without a language are left alone" do
       html = Carvex.to_html!("```\nx\n```\n", syntax_highlight: [engine: :syntect])
       assert html == "<pre><code>x\n</code></pre>"

@@ -13,6 +13,7 @@ defmodule Carvex.Renderer do
       end
     else
       with %Document{} = doc <- run(Document.put_private(doc, :heex, heex?)),
+           :ok <- check_raw(doc, target),
            {:ok, doc} <- highlight(doc, target, heex?),
            {:ok, json, raws} <- AST.encode(doc.nodes, target, heex?),
            {:ok, out} <- native(Native.render_json(json, target, native_options(doc))) do
@@ -38,6 +39,29 @@ defmodule Carvex.Renderer do
 
   defp highlight(doc, :html, heex?), do: Carvex.SyntaxHighlight.apply(doc, heex?)
   defp highlight(doc, _target, _heex?), do: {:ok, doc}
+
+  # Carvex.Raw skips carve-rs, so safe:/profile: never see it. Checked before
+  # highlighting, whose own Carvex.Raw output is trusted.
+  defp check_raw(doc, :html) do
+    render = Document.get_option(doc, :render)
+
+    gated? =
+      not Keyword.fetch!(render, :allow_raw) and
+        (Keyword.fetch!(render, :safe) or Keyword.fetch!(render, :profile) != nil)
+
+    if gated? and Enum.any?(doc, &match?(%Carvex.Raw{}, &1)) do
+      {:error,
+       %CarveError{
+         reason: :raw_not_allowed,
+         message:
+           "Carvex.Raw is not rendered when safe: or profile: is set; pass render: [allow_raw: true] if every plugin emitting it is trusted"
+       }}
+    else
+      :ok
+    end
+  end
+
+  defp check_raw(_doc, _target), do: :ok
 
   defp post_process(html, doc, :html, heex?, raws) do
     html = if heex?, do: Carvex.HEEx.escape_html_braces(html), else: html

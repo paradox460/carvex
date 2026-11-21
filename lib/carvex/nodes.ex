@@ -208,7 +208,9 @@ end
 
 defmodule Carvex.Raw do
   @moduledoc """
-  Raw HTML emitted verbatim in HTML output, regardless of `safe:` or profiles.
+  Raw HTML emitted verbatim in HTML output. It bypasses `safe:` and profiles, so
+  with either set, rendering fails with reason `:raw_not_allowed` unless
+  `render: [allow_raw: true]`.
 
   Never produced by the parser; for plugins (build the content with
   `Carvex.safe_html/2`). Non-HTML outputs write it as a raw `html` node.

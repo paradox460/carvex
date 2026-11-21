@@ -5,7 +5,7 @@ defmodule Carvex.CarveError do
   `reason` holds the underlying cause. Engine failures are `{kind, message}` where
   `kind` is one of `:profile_violation`, `:invalid_ast`, `:render`, `:invalid_option`
   or `:panic`; other reasons include `{:highlight, error}`, `{:invalid_node, term}`,
-  `{:unknown_ast_type, type}` and `{:unknown_ast_field, type, key}`.
+  `{:unknown_ast_type, type}`, `{:unknown_ast_field, type, key}` and `:raw_not_allowed`.
   """
 
   defexception [:reason, message: "An error occurred transforming the Carve document"]
